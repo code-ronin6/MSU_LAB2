@@ -84,8 +84,7 @@ double integral(double (*f)(double x), double a, double b, double eps2, double m
 
     for (int i = 1; i < n-1; i++) 
         res += delta * f(a + i*delta);
-
-
+    
     return res;
 }
 
@@ -118,9 +117,6 @@ int main(void) {
     else printf("Something went wrong!\n\n");
 
     // the pow of 10^(-n) should equal number of decimal points in "answer"
-
-    // GITHUB!
-
 
     return 0;
 
