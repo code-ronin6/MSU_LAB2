@@ -7,46 +7,18 @@
 static double EPS1 = 0.001;
 static double EPS2 = 0.001;
 
-double f1(double x) {
-    double res = log(x);
-    return res;
-}
+extern double f1(double x);
+extern double f2(double x);
+extern double f3(double x);
 
-double f2(double x) {
-    return -2 * x + 14;
-}
+extern double example1(double x);
+extern double example2(double x);
 
-double f3(double x) {
-    return 1/(2-x) + 6;
-}
-//////////////////////////////////////////////////////////////////////////////////////////// 
-double example1(double x) {
-    return 1/x;
-}
+extern double second_der_f1(double x);
+extern double second_der_f2(double x);
+extern double second_der_f3(double x);
 
-double example2(double x) {
-    return x*x;
-}
-////////////////////////////////////////////////////////////////////////////////////////////
-double second_der_f1(double x) {
-    return -1/(x*x);
-}
-
-double second_der_f2(double x) {
-    return 0;
-}
-
-double second_der_f3(double x) {
-    return 2/pow((2-x), 3.0);
-}
-//////////////////////////////////////////////////////////////////////////////////////////
-double second_der_example1(double x) {
-    return 2/(x*x*x);
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
+extern double second_der_example1(double x);
 
 
 double root(double (*f)(double x), double (*g)(double x), double a, double b, double eps1) {
@@ -84,13 +56,13 @@ double integral(double (*f)(double x), double a, double b, double eps2, double m
 
     for (int i = 1; i < n-1; i++) 
         res += delta * f(a + i*delta);
-    
+
+
     return res;
 }
 
 int main(void) {
     //printf("first example (must be 1): %lf\n", );
-
     printf("TEST_1:\n");
     double res = root(example1, example2, 0.99, 3, EPS1);
     if (res <= 1 + EPS1 && res >= 1 - EPS1) printf("Correct!\n\n");
@@ -115,8 +87,8 @@ int main(void) {
     res = root(f1, f3, 2.1, 4, EPS1);
     if (res <= 2.192 + (EPS1*10) && res >= 2.192 - (EPS1*10)) printf("Correct!\n\n");
     else printf("Something went wrong!\n\n");
-
     // the pow of 10^(-n) should equal number of decimal points in "answer"
+
 
     return 0;
 
