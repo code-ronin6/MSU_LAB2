@@ -69,9 +69,7 @@ double integral(double (*f)(double x), double a, double b, double eps2, double m
 
     return res;
 }
-//TODO: create special key that prints out some examples of integrals or roots
 //TODO: change logic of -R and -I keys
-//TODO: -A automatic check
 
 //calculates roots and counts iterations
 //you can't get number of iterations without getting roots!
@@ -118,6 +116,8 @@ void inf(void) {
     printf("-R (--root) - Получить точки пересечения графиков функции, заданных вариантом задания\n");
     printf("-I (--iterations) - Количество итераций, потребовавшихся для примерного вычисления корней\n");
     printf("-A (--ans) - Вычислить площадь фигуры, определенной вариантом задания\n");
+    printf("--testroot - Вычислить точку пересечения заданной функции (из трех, предусмторенных заданием)\nКак использовать: <Номер функции f> <Номер функции g> <a> <b> <eps1>\n");
+    printf("--testintegral - Вычислить интеграл заданной функции (из трех, предусмотренных заданием)\nКак использовать: <Номер функции f> <a> <b> <eps2>\n");
 }
 
 void final_integral_script(void) {
@@ -132,12 +132,62 @@ void final_integral_script(void) {
     s -= integral(f1, x1, x3, EPS2, MAX(second_der_f1(x3), second_der_f1(x1)));
 
     printf("The square is: %lf\n\n", s);
+
+    if (s <= 11.236 + (100*EPS2) && s >= 11.236 - (100*EPS2)) printf("Correct!\n\n");
+    else printf("Something went worng...\n\n");
+}
+
+void test_root(int fnum, int gnum, double a, double b, double eps1) {
+    if (fnum == 1) {
+        if (gnum == 2) {
+            double res = root(f1, f2, a, b, eps1);
+            printf("Root for function f1 - f2 = 0: %lf\n\n", res);
+        }
+        else if (gnum == 3) {
+            double res = root(f1, f3, a, b, eps1);
+            printf("Root for function f1 - f3 = 0: %lf\n\n", res);
+        }
+    }
+    else if (fnum == 2) {
+        if (gnum == 1) {
+            double res = root(f2, f1, a, b, eps1);
+            printf("Root for function f2 - f1 = 0: %lf\n\n", res);
+        }
+        else if (gnum == 3) {
+            double res = root(f2, f3, a, b, eps1);
+            printf("Root for function f2 - f3 = 0: %lf\n\n", res);
+        }
+    }
+    else if (fnum == 3) {
+        if (gnum == 1) {
+            double res = root(f3, f1, a, b, eps1);
+            printf("Root for function f3 - f1 = 0: %lf\n\n", res);
+        }
+        else if (gnum == 2) {
+            double res = root(f3, f2, a, b, eps1);
+            printf("Root for function f3 - f2 = 0: %lf\n\n", res);
+        }
+    }
+    else if (fnum > 3 || gnum > 3) printf("Функци с таким номером не найдена. Для справки используйте -H (--help)\n");
+}
+
+void test_integral(int fnum, double a, double b, double eps2) {
+    if (fnum == 1) {
+        printf("Интеграл функции f1 на отрезке [%lf, %lf] равен: %lf\n", a, b, integral(f1, a, b, eps2, MAX(second_der_f1(a), second_der_f1(b))));
+    }
+    else if (fnum == 2) {
+        printf("Интеграл функции f2 на отрезке [%lf, %lf] равен: %lf\n", a, b, integral(f2, a, b, eps2, MAX(second_der_f2(a), second_der_f2(b))));
+    }
+    else if (fnum == 3) {
+        printf("Интеграл функции f3 на отрезке [%lf, %lf] равен: %lf\n", a, b, integral(f3, a, b, eps2, MAX(second_der_f3(a), second_der_f3(b))));
+    }
+    else printf("Функци с таким номером не найдена. Для справки используйте -H (--help)\n");
 }
 
 
 int main(int argc, char *argv[]) {
 
-    int keys[4] = {0};
+    int keys[6] = {0};
     //inf();
 
     for (int i = 1; i < argc; i++) {
@@ -182,6 +232,23 @@ int main(int argc, char *argv[]) {
             else {
                 final_integral_script();
                 keys[3] = 1;
+            }
+        }
+
+        else if (!strcmp(argv[i], "--testroot")) {
+            if (keys[4]) {
+                printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+            }
+            else {
+                test_root(atoi(argv[i+1]), atoi(argv[i+2]), atof(argv[i+3]), atof(argv[i+4]), atof(argv[i+5]));
+            }
+        }
+        else if (!strcmp(argv[i], "--testintegral")) {
+            if (keys[5]) {
+                printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+            }
+            else {
+                test_integral(atoi(argv[i+1]), atof(argv[i+2]), atof(argv[i+3]), atof(argv[i+4]));
             }
         }
     }
