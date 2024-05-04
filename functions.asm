@@ -1,3 +1,4 @@
+section .text
 global example1
 example1:
     push ebp
@@ -167,7 +168,3 @@ second_der_example1:
     fdivp
     leave
     ret
-    
-    
-
-; check!
