@@ -12,6 +12,7 @@ static int iterations_[3] = {0};
 
 static double EPS1 = 0.001;
 static double EPS2 = 0.001;
+static int root_err = 0;
 
 extern double f1(double x);
 extern double f2(double x);
@@ -29,10 +30,15 @@ extern double second_der_example1(double x);
 // the pow of 10^(-n) should equal number of decimal points in "answer"
 double root(double (*f)(double x), double (*g)(double x), double a, double b, double eps1) {
     iterations = 0;
+    root_err = 0;
     // method of dividing by two
     double delta = (b - a)/2;
     double new_b = b;
     do {
+        if (iterations > 100000) {
+            root_err = 1;
+            return 0;
+        }
         // [a, a + (b-a)/2] and [a + (b-a)/2, b]
         iterations++;
         new_b = a + delta;
@@ -52,7 +58,7 @@ double root(double (*f)(double x), double (*g)(double x), double a, double b, do
 }
 
 double integral(double (*f)(double x), double a, double b, double eps2, double max_der_second) { //integral(f, a, b, esp, sup(f''(x)))
-
+    if (a == b) return 0;
     // Kotes for-la
     // the biggest value of der is f''(a) 
     double n = sqrt(fabs(max_der_second*(a - b)/(12*eps2*eps2)));
@@ -137,38 +143,71 @@ void final_integral_script(void) {
     else printf("Something went worng...\n\n");
 }
 
-void test_root(int fnum, int gnum, double a, double b, double eps1) {
+int test_root(int fnum, int gnum, double a, double b, double eps1) {
     if (fnum == 1) {
         if (gnum == 2) {
             double res = root(f1, f2, a, b, eps1);
+            if (root_err) {
+                printf("Ошибка выполнения. Корень не найден!\n");
+                return 1;
+            }
             printf("Root for function f1 - f2 = 0: %lf\n\n", res);
+            return 0;
         }
         else if (gnum == 3) {
             double res = root(f1, f3, a, b, eps1);
+            if (root_err) {
+                printf("Ошибка выполнения. Корень не найден!\n");
+                return 1;
+            }
             printf("Root for function f1 - f3 = 0: %lf\n\n", res);
+            return 0;
         }
     }
     else if (fnum == 2) {
         if (gnum == 1) {
             double res = root(f2, f1, a, b, eps1);
+            if (root_err) {
+                printf("Ошибка выполнения. Корень не найден!\n");
+                return 1;
+            }
             printf("Root for function f2 - f1 = 0: %lf\n\n", res);
+            return 0;
         }
         else if (gnum == 3) {
             double res = root(f2, f3, a, b, eps1);
+            if (root_err) {
+                printf("Ошибка выполнения. Корень не найден!\n");
+                return 1;
+            }
             printf("Root for function f2 - f3 = 0: %lf\n\n", res);
+            return 0;
         }
     }
     else if (fnum == 3) {
         if (gnum == 1) {
             double res = root(f3, f1, a, b, eps1);
+            if (root_err) {
+                printf("Ошибка выполнения. Корень не найден!\n");
+                return 1;
+            }
             printf("Root for function f3 - f1 = 0: %lf\n\n", res);
+            return 0;
         }
         else if (gnum == 2) {
             double res = root(f3, f2, a, b, eps1);
+            if (root_err) {
+                printf("Ошибка выполнения. Корень не найден!\n");
+                return 1;
+            }
             printf("Root for function f3 - f2 = 0: %lf\n\n", res);
+            return 0;
         }
     }
-    else if (fnum > 3 || gnum > 3) printf("Функци с таким номером не найдена. Для справки используйте -H (--help)\n");
+    else if (fnum > 3 || gnum > 3) {
+        printf("Функция с таким номером не найдена. Для справки используйте -H (--help)\n");
+        return 1;
+    }
 }
 
 void test_integral(int fnum, double a, double b, double eps2) {
@@ -187,17 +226,45 @@ void test_integral(int fnum, double a, double b, double eps2) {
 
 int main(int argc, char *argv[]) {
 
-    int keys[6] = {0};
-    //inf();
+    /*
+    keys[0] - help
+    keys[1] - root
+    keys[2] - iterations
+    keys[3] - answer
+    keys[4] - testroot
+    keys[5] - testintegral
+    */
 
+    int keys[6] = {0};
+
+
+    //data for test_root function
+    struct test_root_data {
+        int fnum;
+        int gnum;
+        double a, b, eps1;
+    };
+    struct test_root_data root_data_container;
+    root_data_container.fnum = 0;
+
+    //data for test_integral function
+    struct test_integral_data {
+        int fnum;
+        double a, b, eps2;
+    };
+    struct test_integral_data integral_data_container;
+    integral_data_container.fnum = 0;
+
+    //collector of keys
+    //checks repeating of keys
     for (int i = 1; i < argc; i++) {
 
         if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-H")) {
             if (keys[0]) {
                 printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+                return 0;
             }
             else {
-                inf();
                 keys[0] = 1;
             }
         }
@@ -205,9 +272,9 @@ int main(int argc, char *argv[]) {
         else if (!strcmp(argv[i], "--root") || !strcmp(argv[i], "-R")) {
             if (keys[1]) {
                 printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+                return 0;
             }
             else {
-                script_roots();
                 keys[1] = 1;
             }
         }
@@ -215,40 +282,123 @@ int main(int argc, char *argv[]) {
         else if (!strcmp(argv[i], "--iterations") || !strcmp(argv[i], "-I")) {
             if (keys[2]) {
                 printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+                return 0;
             }
             else {
-                if (keys[1]) {
-                    count_iterations();
-                    keys[2] = 1;
-                }
-                else printf("Сначала нужно вычислить корни (используйте флаг -R (--root))\n");
+                keys[2] = 1;
             }
         }
 
         else if (!strcmp(argv[i], "--ans") || !strcmp(argv[i], "-A")) {
             if (keys[3]) {
                 printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+                return 0;
             }
             else {
-                final_integral_script();
                 keys[3] = 1;
             }
         }
+        
 
         else if (!strcmp(argv[i], "--testroot")) {
             if (keys[4]) {
                 printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+                return 1;
             }
             else {
-                test_root(atoi(argv[i+1]), atoi(argv[i+2]), atof(argv[i+3]), atof(argv[i+4]), atof(argv[i+5]));
+                if (!atoi(argv[i+1])) {
+                    
+                    printf("Неправильно введены параметры для  --testroot. Для справки используйте -H (--help)\n\n");
+                    return 1;
+                }
+                else root_data_container.fnum = atoi(argv[i+1]);
+                
+                if (!atoi(argv[i+2])) {
+                    printf("Неправильно введены параметры для  --testroot. Для справки используйте -H (--help)\n\n");
+                    return 1;
+                }
+                else root_data_container.gnum = atoi(argv[i+2]);
+
+                if (strcmp(argv[i+3], "0") && strcmp(argv[i+3], "0.0") && !atof(argv[i+3])) {
+                    printf("Неправильно введены параметры для  --testroot. Для справки используйте -H (--help)\n\n");
+                    return 1;    
+                }
+                else root_data_container.a = atof(argv[i+3]);
+
+                if (strcmp(argv[i+4], "0") && strcmp(argv[i+4], "0.0") && !atof(argv[i+4])) {
+                    printf("Неправильно введены параметры для  --testroot. Для справки используйте -H (--help)\n\n");
+                    return 1;        
+                }
+                else root_data_container.b = atof(argv[i+4]);
+
+                if (!atof(argv[i+5])) {
+                    printf("Неправильно введены параметры для  --testroot. Для справки используйте -H (--help)\n\n");
+                    return 1;            
+                }
+                else root_data_container.eps1 = atof(argv[i+5]);
+                keys[4] = 1;
             }
         }
         else if (!strcmp(argv[i], "--testintegral")) {
             if (keys[5]) {
                 printf("Повторное использование ключа. Для справки используйте -H (--help)\n\n");
+                return 1;
             }
             else {
-                test_integral(atoi(argv[i+1]), atof(argv[i+2]), atof(argv[i+3]), atof(argv[i+4]));
+                if (!atoi(argv[i+1])) {
+                    printf("Неправильно введены параметры для  --testintegral. Для справки используйте -H (--help)\n\n");
+                    return 1;                
+                }
+                else integral_data_container.fnum = atoi(argv[i+1]);
+
+                if (strcmp(argv[i+2], "0") && strcmp(argv[i+2], "0.0") && !atof(argv[i+2])) {
+                    printf("Неправильно введены параметры для  --testintegral. Для справки используйте -H (--help)\n\n");
+                    return 1;                    
+                }
+                else integral_data_container.a = atof(argv[i+2]);
+
+                if (strcmp(argv[i+3], "0") && strcmp(argv[i+3], "0.0") && !atof(argv[i+3])) {
+                    printf("Неправильно введены параметры для  --testintegral. Для справки используйте -H (--help)\n\n");
+                    return 1;                        
+                }
+                else integral_data_container.b = atof(argv[i+3]);
+
+                if (!atof(argv[i+4])) {
+                    printf("Неправильно введены параметры для  --testintegral. Для справки используйте -H (--help)\n\n");
+                    return 1;                            
+                }
+                else integral_data_container.eps2 = atof(argv[i+4]);
+                keys[5] = 1;
+            }
+        }
+        else {
+            if (root_data_container.fnum || integral_data_container.fnum) continue;
+            printf("Такого ключа не существует. Для справки используйте -H (--help)\n");
+            return 1;
+        }
+    }
+    for (int i = 0; i < 6; i++) {
+        if (keys[i]) {
+            switch (i) {
+                case 0:
+                    inf();
+                    break; 
+                case 1:
+                    script_roots();
+                    break;
+                case 2:
+                    if (keys[1]) count_iterations();
+                    else printf("Перед использованием нужно вычислить корни. Используйте -R (--root)\n"); 
+                    break;
+                case 3:
+                    final_integral_script();
+                    break;
+                case 4:
+                    test_root(root_data_container.fnum, root_data_container.gnum, root_data_container.a, root_data_container.b, root_data_container.eps1);
+                    break;
+                case 5:
+                    test_integral(integral_data_container.fnum, integral_data_container.a, integral_data_container.b, integral_data_container.eps2);
+                    break;
             }
         }
     }
